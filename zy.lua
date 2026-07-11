@@ -1,8 +1,3 @@
---[[
-    Optimized & Cleaned ESP Script with Name & Distance + Team Color Sync
-    Features: Box, Fill, Skeleton, Health, Chams, Names/Distance, Team Color Sync, Smooth UI Dragging (Insert to Toggle)
-]]
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -16,7 +11,7 @@ local ESP_Config = {
     Health = false,
     Chams = false,
     Names = false,
-    TeamCheck = false, -- Toggles between preset colors vs real Roblox Team colors
+    TeamCheck = false,
     
     BoxColor = Color3.fromRGB(255, 0, 0),
     FillColor = Color3.fromRGB(255, 0, 0),
@@ -103,7 +98,7 @@ RunService.RenderStepped:Connect(function()
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             
             if onScreen then
-                -- Determine active coloring state
+                
                 local activeBoxColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.BoxColor
                 local activeFillColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.FillColor
                 local activeSkeletonColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.SkeletonColor
@@ -119,7 +114,7 @@ RunService.RenderStepped:Connect(function()
                 local tlX = pos.X - (width / 2)
                 local tlY = headPos.Y
                 
-                -- Box Drawing Logic
+                
                 if ESP_Config.Box then
                     data.Drawings.Box.Size = Vector2.new(width, height)
                     data.Drawings.Box.Position = Vector2.new(tlX, tlY)
@@ -134,7 +129,7 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.BoxOutline.Visible = false
                 end
                 
-                -- Box Fill Logic
+                
                 if ESP_Config.Fill then
                     data.Drawings.BoxFill.Size = Vector2.new(width, height)
                     data.Drawings.BoxFill.Position = Vector2.new(tlX, tlY)
@@ -145,7 +140,7 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.BoxFill.Visible = false
                 end
                 
-                -- Health Bar Logic
+                
                 if ESP_Config.Health then
                     local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
                     local barHeight = height * healthPercent
@@ -163,7 +158,7 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.HealthBg.Visible = false
                 end
                 
-                -- Name & Distance Logic
+                
                 if ESP_Config.Names then
                     local distance = localHrp and math.round((localHrp.Position - hrp.Position).Magnitude) or 0
                     data.Drawings.NameTag.Text = string.format("%s [%d studs]", player.Name, distance)
@@ -174,7 +169,7 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.NameTag.Visible = false
                 end
                 
-                -- Skeleton Logic
+                
                 if ESP_Config.Skeleton then
                     local function DrawBone(line, p1, p2)
                         if p1 and p2 then
@@ -208,7 +203,7 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
                 
-                -- Chams Logic
+                
                 if ESP_Config.Chams then
                     if not data.Highlight then
                         local hl = Instance.new("Highlight")
