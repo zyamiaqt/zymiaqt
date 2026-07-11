@@ -1,6 +1,6 @@
 --[[
-    Optimized & Cleaned ESP Script with Name & Distance
-    Features: Box, Fill, Skeleton, Health, Chams, Names/Distance, Smooth UI Dragging (Insert to Toggle)
+    Optimized & Cleaned ESP Script with Name & Distance + Team Color Sync
+    Features: Box, Fill, Skeleton, Health, Chams, Names/Distance, Team Color Sync, Smooth UI Dragging (Insert to Toggle)
 ]]
 
 local Players = game:GetService("Players")
@@ -15,7 +15,8 @@ local ESP_Config = {
     Skeleton = false,
     Health = false,
     Chams = false,
-    Names = false, -- New Name & Distance toggle
+    Names = false,
+    TeamCheck = false, -- Toggles between preset colors vs real Roblox Team colors
     
     BoxColor = Color3.fromRGB(255, 0, 0),
     FillColor = Color3.fromRGB(255, 0, 0),
@@ -23,6 +24,7 @@ local ESP_Config = {
     HealthColor = Color3.fromRGB(0, 255, 0),
     ChamsColor = Color3.fromRGB(255, 0, 255),
     NamesColor = Color3.fromRGB(255, 255, 255),
+    TeamCheckColor = Color3.fromRGB(40, 40, 55),
     
     FillTransparency = 0.5,
     ChamsTransparency = 0.5
@@ -101,6 +103,13 @@ RunService.RenderStepped:Connect(function()
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             
             if onScreen then
+                -- Determine active coloring state
+                local activeBoxColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.BoxColor
+                local activeFillColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.FillColor
+                local activeSkeletonColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.SkeletonColor
+                local activeNamesColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.NamesColor
+                local activeChamsColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.ChamsColor
+
                 local head = char:FindFirstChild("Head")
                 local headPos = head and Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or Camera:WorldToViewportPoint(hrp.Position + Vector3.new(0, 2, 0))
                 local legPos = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
@@ -114,7 +123,7 @@ RunService.RenderStepped:Connect(function()
                 if ESP_Config.Box then
                     data.Drawings.Box.Size = Vector2.new(width, height)
                     data.Drawings.Box.Position = Vector2.new(tlX, tlY)
-                    data.Drawings.Box.Color = ESP_Config.BoxColor
+                    data.Drawings.Box.Color = activeBoxColor
                     data.Drawings.Box.Visible = true
                     
                     data.Drawings.BoxOutline.Size = data.Drawings.Box.Size
@@ -129,7 +138,7 @@ RunService.RenderStepped:Connect(function()
                 if ESP_Config.Fill then
                     data.Drawings.BoxFill.Size = Vector2.new(width, height)
                     data.Drawings.BoxFill.Position = Vector2.new(tlX, tlY)
-                    data.Drawings.BoxFill.Color = ESP_Config.FillColor
+                    data.Drawings.BoxFill.Color = activeFillColor
                     data.Drawings.BoxFill.Transparency = ESP_Config.FillTransparency
                     data.Drawings.BoxFill.Visible = true
                 else
@@ -159,7 +168,7 @@ RunService.RenderStepped:Connect(function()
                     local distance = localHrp and math.round((localHrp.Position - hrp.Position).Magnitude) or 0
                     data.Drawings.NameTag.Text = string.format("%s [%d studs]", player.Name, distance)
                     data.Drawings.NameTag.Position = Vector2.new(pos.X, tlY - 15)
-                    data.Drawings.NameTag.Color = ESP_Config.NamesColor
+                    data.Drawings.NameTag.Color = activeNamesColor
                     data.Drawings.NameTag.Visible = true
                 else
                     data.Drawings.NameTag.Visible = false
@@ -174,7 +183,7 @@ RunService.RenderStepped:Connect(function()
                             if os1 and os2 then
                                 line.From = Vector2.new(w2p1.X, w2p1.Y)
                                 line.To = Vector2.new(w2p2.X, w2p2.Y)
-                                line.Color = ESP_Config.SkeletonColor
+                                line.Color = activeSkeletonColor
                                 line.Visible = true
                                 return
                             end
@@ -207,7 +216,7 @@ RunService.RenderStepped:Connect(function()
                         hl.Parent = char
                         data.Highlight = hl
                     end
-                    data.Highlight.FillColor = ESP_Config.ChamsColor
+                    data.Highlight.FillColor = activeChamsColor
                     data.Highlight.FillTransparency = ESP_Config.ChamsTransparency
                     data.Highlight.OutlineTransparency = 1
                     data.Highlight.Enabled = true
@@ -234,10 +243,9 @@ screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- Adjusted height to 345 to fit the extra name option perfectly
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 340, 0, 345)
-frame.Position = UDim2.new(0.5, -170, 0.5, -172)
+frame.Size = UDim2.new(0, 340, 0, 390)
+frame.Position = UDim2.new(0.5, -170, 0.5, -195)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -316,13 +324,13 @@ local function makeToggle(text, pos, configKey)
     end)
 end
 
-local function makeColorCycleButton(text, pos, configKey)
+local function makeColorCycleButton(text, pos, configKey, isLocked)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 130, 0, 35)
     btn.Position = pos
     btn.BackgroundColor3 = ESP_Config[configKey]
     btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.TextColor3 = isLocked and Color3.fromRGB(130, 130, 140) or Color3.fromRGB(0, 0, 0)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 10
     btn.Parent = frame
@@ -330,6 +338,8 @@ local function makeColorCycleButton(text, pos, configKey)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
+    
+    if isLocked then return end -- Skip interaction loop for the Team Check slot
     
     local currentIndex = 1
     btn.MouseButton1Click:Connect(function()
@@ -347,14 +357,20 @@ local function makeColorCycleButton(text, pos, configKey)
     end)
 end
 
--- Component Initialization (Added Names to array)
-local features = {"Box", "Fill", "Skeleton", "Health", "Chams", "Names"}
-local displayNames = {"BOX", "BOX FILL", "SKELETON", "HEALTH", "CHAMS", "NAMES & DIST"}
+-- Component Initialization
+local features = {"Box", "Fill", "Skeleton", "Health", "Chams", "Names", "TeamCheck"}
+local displayNames = {"BOX", "BOX FILL", "SKELETON", "HEALTH", "CHAMS", "NAMES & DIST", "TEAM CHECK"}
 
 for i, feature in ipairs(features) do
     local yPos = 65 + ((i - 1) * 45)
     makeToggle(displayNames[i], UDim2.new(0, 20, 0, yPos), feature)
-    makeColorCycleButton("CHANGE COLOR", UDim2.new(0, 180, 0, yPos), feature .. "Color")
+    
+    -- "TeamCheck" doesn't use standard color cycles since it reads game configurations dynamically
+    if feature == "TeamCheck" then
+        makeColorCycleButton("ROBLOX AUTO COLOR", UDim2.new(0, 180, 0, yPos), feature .. "Color", true)
+    else
+        makeColorCycleButton("CHANGE COLOR", UDim2.new(0, 180, 0, yPos), feature .. "Color", false)
+    end
 end
 
 local info = Instance.new("TextLabel")
