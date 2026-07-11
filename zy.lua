@@ -47,11 +47,13 @@ end
 
 local function ClearESP(player)
     if Cache[player] then
-        for _, obj in pairs(Cache[player].Drawings) do
-            obj:Remove()
+        if Cache[player].Drawings then
+            for _, obj in pairs(Cache[player].Drawings) do
+                pcall(function() obj:Remove() end)
+            end
         end
         if Cache[player].Highlight then
-            Cache[player].Highlight:Destroy()
+            pcall(function() Cache[player].Highlight:Destroy() end)
         end
         Cache[player] = nil
     end
@@ -80,7 +82,6 @@ local function SetupESP(player)
     }
 end
 
--- Render Connection
 RunService.RenderStepped:Connect(function()
     local localChar = LocalPlayer.Character
     local localHrp = localChar and localChar:FindFirstChild("HumanoidRootPart")
@@ -98,7 +99,6 @@ RunService.RenderStepped:Connect(function()
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             
             if onScreen then
-                
                 local activeBoxColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.BoxColor
                 local activeFillColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.FillColor
                 local activeSkeletonColor = ESP_Config.TeamCheck and player.TeamColor.Color or ESP_Config.SkeletonColor
@@ -114,7 +114,6 @@ RunService.RenderStepped:Connect(function()
                 local tlX = pos.X - (width / 2)
                 local tlY = headPos.Y
                 
-                
                 if ESP_Config.Box then
                     data.Drawings.Box.Size = Vector2.new(width, height)
                     data.Drawings.Box.Position = Vector2.new(tlX, tlY)
@@ -129,7 +128,6 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.BoxOutline.Visible = false
                 end
                 
-                
                 if ESP_Config.Fill then
                     data.Drawings.BoxFill.Size = Vector2.new(width, height)
                     data.Drawings.BoxFill.Position = Vector2.new(tlX, tlY)
@@ -139,7 +137,6 @@ RunService.RenderStepped:Connect(function()
                 else
                     data.Drawings.BoxFill.Visible = false
                 end
-                
                 
                 if ESP_Config.Health then
                     local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
@@ -158,7 +155,6 @@ RunService.RenderStepped:Connect(function()
                     data.Drawings.HealthBg.Visible = false
                 end
                 
-                
                 if ESP_Config.Names then
                     local distance = localHrp and math.round((localHrp.Position - hrp.Position).Magnitude) or 0
                     data.Drawings.NameTag.Text = string.format("%s [%d studs]", player.Name, distance)
@@ -168,7 +164,6 @@ RunService.RenderStepped:Connect(function()
                 else
                     data.Drawings.NameTag.Visible = false
                 end
-                
                 
                 if ESP_Config.Skeleton then
                     local function DrawBone(line, p1, p2)
@@ -203,7 +198,6 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
                 
-                
                 if ESP_Config.Chams then
                     if not data.Highlight then
                         local hl = Instance.new("Highlight")
@@ -231,7 +225,6 @@ end)
 
 Players.PlayerRemoving:Connect(ClearESP)
 
--- GUI SETUP
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AjnurHubESP"
 screenGui.ResetOnSpawn = false
@@ -263,7 +256,6 @@ local corner2 = Instance.new("UICorner")
 corner2.CornerRadius = UDim.new(0, 10)
 corner2.Parent = label
 
--- Modern UI Dragging Implementation
 local dragging, dragInput, dragStart, startPos
 label.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -323,7 +315,7 @@ local function makeColorCycleButton(text, pos, configKey, isLocked)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 130, 0, 35)
     btn.Position = pos
-    btn.BackgroundColor3 = ESP_Config[configKey]
+    btn.BackgroundColor3 = ESP_Config[configKey] or Color3.fromRGB(40, 40, 55)
     btn.Text = text
     btn.TextColor3 = isLocked and Color3.fromRGB(130, 130, 140) or Color3.fromRGB(0, 0, 0)
     btn.Font = Enum.Font.GothamBold
@@ -334,7 +326,7 @@ local function makeColorCycleButton(text, pos, configKey, isLocked)
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
     
-    if isLocked then return end -- Skip interaction loop for the Team Check slot
+    if isLocked then return end
     
     local currentIndex = 1
     btn.MouseButton1Click:Connect(function()
@@ -352,7 +344,6 @@ local function makeColorCycleButton(text, pos, configKey, isLocked)
     end)
 end
 
--- Component Initialization
 local features = {"Box", "Fill", "Skeleton", "Health", "Chams", "Names", "TeamCheck"}
 local displayNames = {"BOX", "BOX FILL", "SKELETON", "HEALTH", "CHAMS", "NAMES & DIST", "TEAM CHECK"}
 
@@ -360,7 +351,6 @@ for i, feature in ipairs(features) do
     local yPos = 65 + ((i - 1) * 45)
     makeToggle(displayNames[i], UDim2.new(0, 20, 0, yPos), feature)
     
-    -- "TeamCheck" doesn't use standard color cycles since it reads game configurations dynamically
     if feature == "TeamCheck" then
         makeColorCycleButton("ROBLOX AUTO COLOR", UDim2.new(0, 180, 0, yPos), feature .. "Color", true)
     else
